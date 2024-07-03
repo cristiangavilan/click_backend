@@ -203,6 +203,16 @@ def getProducts():
     return jsonify(products), 200
 
 
+@app.route("/products/<int:category_id>")
+def getProductsByCategory(category_id):
+    # products = Products.query.all()
+    print(category_id)
+    products = Products.query.filter_by(categoryId=category_id).all()
+    products = list(map(lambda products: products.toDict(), products))
+    print(jsonify(products))
+    return jsonify(products), 200
+
+
 @app.route("/products/<int:product_id>")
 def getProduct(product_id):
     product = Products.query.filter_by(id=product_id).first()
