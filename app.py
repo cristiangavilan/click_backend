@@ -20,7 +20,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app = Flask(__name__)
 CORS(app)
 
-# Reemplaza los valores de usuario, contraseña, host y nombre de la base de datos con los tuyos
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["ASSETS_FOLDER"] = ASSETS_FOLDER
 app.config["SQLALCHEMY_DATABASE_URI"] = (
@@ -237,24 +236,45 @@ def createProduct():
     return jsonify(message="Product created successfully"), 201
 
 
+@app.route("/products", methods=["PUT"])
+@jwt_required()
+def modifyProduct():
+    product_id = request.json["id"]
+    update_fields = {
+        "title": request.json["title"],
+        "description": request.json["description"],
+        "price": request.json["price"],
+        "image": request.json["image"],
+        "count": request.json["count"],
+        "rate": request.json["rate"],
+        "categoryId": request.json["categoryId"],
+    }
+    db.session.query(Products).filter(Products.id == product_id).update(update_fields)
+    db.session.commit()
+    return jsonify(message="Product modified successfully"), 201
+
+
+@app.route("/products/<int:product_id>", methods=["DELETE"])
+@jwt_required()
+def deleteProduct(product_id):
+
+    db.session.query(Products).filter(Products.id == product_id).delete()
+    db.session.commit()
+    return jsonify(message="Product deleted successfully"), 201
+
+
 @app.route("/uploadimage", methods=["POST"])
 @jwt_required()
 def upload_file():
-    # Comprueba si la petición tiene el archivo
     if "file" not in request.files:
         return jsonify({"message": "No file part"}), 400
     file = request.files["file"]
-    # Si el usuario no selecciona un archivo, el navegador
-    # puede enviar una parte vacía sin nombre de archivo
     if file.filename == "":
         return jsonify({"message": "No selected file"}), 400
     if file:
-        # Aquí puedes añadir una validación adicional del archivo (por ejemplo, su extensión)
         filename = file.filename
-        # Guarda el archivo en la carpeta de subidas
         file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(file_path)
-        # Construye la URL completa
         file_url = os.path.join(
             request.host_url, app.config["UPLOAD_FOLDER"], filename
         ).replace("\\", "/")
