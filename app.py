@@ -120,6 +120,11 @@ class Products(db.Model):
         }
 
 
+@app.route("/")
+def index():
+    return jsonify({"message": "Welcome to my API"}), 200
+
+
 @app.route("/register", methods=["POST"])
 def register():
 
